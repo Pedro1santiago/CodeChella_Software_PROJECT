@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/CodeChella_API_PROJECT.iml" filepath="$PROJECT_DIR$/.idea/CodeChella_API_PROJECT.iml" />
-      <module fileurl="file://$PROJECT_DIR$/codechella/codechella.iml" filepath="$PROJECT_DIR$/codechella/codechella.iml" />
     </modules>
   </component>
 </project>
