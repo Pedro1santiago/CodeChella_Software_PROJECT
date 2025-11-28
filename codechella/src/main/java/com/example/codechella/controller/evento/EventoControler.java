@@ -16,7 +16,6 @@ import java.time.Duration;
 public class EventoControler {
 
     private final EventoService service;
-
     private final Sinks.Many<EventoDTO> eventoSink;
 
     public EventoControler(EventoService service) {
@@ -25,35 +24,53 @@ public class EventoControler {
     }
 
     @GetMapping(produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<EventoDTO> listarTodos(){
+    public Flux<EventoDTO> listarTodos() {
         return service.listarTodos();
     }
 
-    @GetMapping(value = "/evento/categoria/{tipo}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<EventoDTO> obterPorTipo(@PathVariable String tipo){
+    @GetMapping(value = "/categoria/{tipo}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<EventoDTO> obterPorTipo(@PathVariable String tipo) {
         return Flux.merge(service.obterPorTipo(tipo), eventoSink.asFlux())
                 .delayElements(Duration.ofSeconds(4));
     }
 
-    @GetMapping("/evento/{id}")
-    public Mono<EventoDTO> buscarPorId(@PathVariable Long id){
+    @GetMapping("/{id}")
+    public Mono<EventoDTO> buscarPorId(@PathVariable Long id) {
         return service.buscarPorId(id);
     }
 
-    @PostMapping()
-    public Mono<EventoDTO> cadastrar(@RequestParam UserAdmin usuarioAmin, @RequestBody EventoDTO dto){
-        return service.cadastrarEvento(usuarioAmin,dto)
-                .doOnSuccess( e -> eventoSink.tryEmitNext(e));
+    @PostMapping
+    public Mono<EventoDTO> cadastrar(
+            @RequestBody EventoDTO dto,
+            @RequestHeader("admin-id") Long adminId
+    ) {
+        UserAdmin userAdmin = new UserAdmin();
+        userAdmin.setIdUsuario(adminId);
+
+        return service.cadastrarEvento(userAdmin, dto)
+                .doOnSuccess(eventoSink::tryEmitNext);
     }
 
-    @DeleteMapping("/evento/{id}")
-    public Mono<Void> excluir(@PathVariable Long id, @RequestParam UserAdmin usuarioAmin){
-        return service.excluir(id, usuarioAmin);
+    @DeleteMapping("/{id}")
+    public Mono<Void> excluir(
+            @PathVariable Long id,
+            @RequestHeader("admin-id") Long adminId
+    ) {
+        UserAdmin userAdmin = new UserAdmin();
+        userAdmin.setIdUsuario(adminId);
+
+        return service.excluir(id, userAdmin);
     }
 
-    @PutMapping("/evento/{id}")
-    public Mono<EventoDTO> atualizar(@PathVariable Long id, @RequestBody EventoDTO dto, @RequestParam UserAdmin usuarioAmin){
-        return service.atualizarId(id, dto, usuarioAmin);
-    }
+    @PutMapping("/{id}")
+    public Mono<EventoDTO> atualizar(
+            @PathVariable Long id,
+            @RequestBody EventoDTO dto,
+            @RequestHeader("admin-id") Long adminId
+    ) {
+        UserAdmin userAdmin = new UserAdmin();
+        userAdmin.setIdUsuario(adminId);
 
+        return service.atualizarId(id, dto, userAdmin);
+    }
 }
