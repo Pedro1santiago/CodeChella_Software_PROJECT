@@ -1,5 +1,6 @@
 package com.example.codechella.serivce.usuario;
 
+import com.example.codechella.controller.auth.LoginRequest;
 import com.example.codechella.models.users.TipoUsuario;
 import com.example.codechella.models.users.Usuario;
 import com.example.codechella.models.users.UsuarioDTO;
@@ -17,6 +18,20 @@ public class UsuarioService {
     public Mono<UsuarioDTO> cadastrar(UsuarioDTO usuarioDTO) {
         Usuario usuario = usuarioDTO.toEntity();
         usuario.setTipoUsuario(TipoUsuario.USUARIO);
-        return usuarioRepository.save(usuario).map(UsuarioDTO::toDTO);
+        return usuarioRepository
+                .save(usuario)
+                .map(UsuarioDTO::toDTO);
+    }
+
+    public Mono<UsuarioDTO> login(LoginRequest loginDTO) {
+        return usuarioRepository.findByEmail(loginDTO.getEmail())
+                .flatMap(usuario -> {
+                    if (usuario.getSenha().equals(loginDTO.getSenha())) {
+                        return Mono.just(UsuarioDTO.toDTO(usuario));
+                    } else {
+                        return Mono.error(new RuntimeException("Senha incorreta"));
+                    }
+                })
+                .switchIfEmpty(Mono.error(new RuntimeException("Usuário não encontrado")));
     }
 }
