@@ -16,40 +16,23 @@ public class UsuarioAuthController {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    // Registrar novo usuário
     @PostMapping("/registrar")
     public Mono<UsuarioDTO> registrar(@RequestBody UsuarioDTO usuarioDTO) {
         Usuario usuario = usuarioDTO.toEntity();
-
         return usuarioRepository.findByEmail(usuario.getEmail())
                 .flatMap(existing -> Mono.<Usuario>error(
                         new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email já cadastrado")))
                 .switchIfEmpty(Mono.defer(() -> usuarioRepository.save(usuario)))
-                .map(saved -> {
-                    Usuario u = (Usuario) saved;
-                    return new UsuarioDTO(
-                            u.getId(),
-                            u.getNome(),
-                            u.getEmail(),
-                            u.getSenha(),
-                            u.getTipoUsuario(),
-                            u.getCriadoEm()
-                    );
-                });
+                .map(saved -> new UsuarioDTO(
+                        saved.getId(),
+                        saved.getNome(),
+                        saved.getEmail(),
+                        saved.getSenha(),
+                        saved.getTipoUsuario(),
+                        saved.getCriadoEm()
+                ));
     }
 
-
-
-    // Login de usuário
-    @PostMapping("/login")
-    public Mono<UsuarioDTO> login(@RequestParam String email, @RequestParam String senha) {
-        return usuarioRepository.findByEmail(email)
-                .filter(usuario -> usuario.getSenha().equals(senha))
-                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email ou senha inválidos")))
-                .map(UsuarioDTO::toDTO);
-    }
-
-    // Obter dados do usuário
     @GetMapping("/{id}")
     public Mono<UsuarioDTO> obterUsuario(@PathVariable Long id) {
         return usuarioRepository.findById(id)
@@ -57,7 +40,6 @@ public class UsuarioAuthController {
                 .map(UsuarioDTO::toDTO);
     }
 
-    // Atualizar usuário
     @PutMapping("/{id}")
     public Mono<UsuarioDTO> atualizarUsuario(@PathVariable Long id, @RequestBody UsuarioDTO usuarioDTO) {
         return usuarioRepository.findById(id)
@@ -78,7 +60,6 @@ public class UsuarioAuthController {
                 .map(UsuarioDTO::toDTO);
     }
 
-    // Deletar usuário
     @DeleteMapping("/{id}")
     public Mono<Void> deletarUsuario(@PathVariable Long id) {
         return usuarioRepository.deleteById(id);
