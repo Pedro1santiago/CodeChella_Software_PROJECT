@@ -2,7 +2,6 @@ package com.example.codechella.serivce.usuarioAdmin;
 
 import com.example.codechella.models.users.SuperAdmin;
 import com.example.codechella.models.users.UserAdmin;
-import com.example.codechella.models.users.UsuarioAdmin;
 import com.example.codechella.models.users.UsuarioAdminDTO;
 import com.example.codechella.repository.UsuarioAdminRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,5 +36,7 @@ public class UsuarioAdminService {
     }
 
     public Flux<UsuarioAdminDTO> listarTodos() {
+        return repository.findAll().map(UsuarioAdminDTO::toDTO);
     }
+
 }

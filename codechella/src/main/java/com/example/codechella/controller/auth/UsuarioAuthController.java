@@ -19,17 +19,26 @@ public class UsuarioAuthController {
     // Registrar novo usuário
     @PostMapping("/registrar")
     public Mono<UsuarioDTO> registrar(@RequestBody UsuarioDTO usuarioDTO) {
-        Usuario usuario = new Usuario();
-        usuario.setNome(usuarioDTO.nome());
-        usuario.setEmail(usuarioDTO.email());
-        usuario.setSenha(usuarioDTO.senha());
-        usuario.setTipoUsuario(usuarioDTO.tipoUsuario());
+        Usuario usuario = usuarioDTO.toEntity();
 
         return usuarioRepository.findByEmail(usuario.getEmail())
-                .flatMap(u -> Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email já cadastrado")))
-                .switchIfEmpty(usuarioRepository.save(usuario))
-                .map(UsuarioDTO::toDTO);
+                .flatMap(existing -> Mono.<Usuario>error(
+                        new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email já cadastrado")))
+                .switchIfEmpty(Mono.defer(() -> usuarioRepository.save(usuario)))
+                .map(saved -> {
+                    Usuario u = (Usuario) saved;
+                    return new UsuarioDTO(
+                            u.getId(),
+                            u.getNome(),
+                            u.getEmail(),
+                            u.getSenha(),
+                            u.getTipoUsuario(),
+                            u.getCriadoEm()
+                    );
+                });
     }
+
+
 
     // Login de usuário
     @PostMapping("/login")
@@ -48,7 +57,7 @@ public class UsuarioAuthController {
                 .map(UsuarioDTO::toDTO);
     }
 
-    // Atualizar perfil do usuário
+    // Atualizar usuário
     @PutMapping("/{id}")
     public Mono<UsuarioDTO> atualizarUsuario(@PathVariable Long id, @RequestBody UsuarioDTO usuarioDTO) {
         return usuarioRepository.findById(id)
@@ -57,10 +66,11 @@ public class UsuarioAuthController {
                     if (usuarioDTO.nome() != null) usuario.setNome(usuarioDTO.nome());
                     if (usuarioDTO.email() != null && !usuarioDTO.email().equals(usuario.getEmail())) {
                         return usuarioRepository.findByEmail(usuarioDTO.email())
-                                .flatMap(u -> Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email já cadastrado")))
-                                .switchIfEmpty(Mono.just(usuario))
-                                .doOnNext(u -> u.setEmail(usuarioDTO.email()))
-                                .flatMap(usuarioRepository::save);
+                                .flatMap(existing -> Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email já cadastrado")))
+                                .then(Mono.defer(() -> {
+                                    usuario.setEmail(usuarioDTO.email());
+                                    return usuarioRepository.save(usuario);
+                                }));
                     }
                     if (usuarioDTO.senha() != null) usuario.setSenha(usuarioDTO.senha());
                     return usuarioRepository.save(usuario);
