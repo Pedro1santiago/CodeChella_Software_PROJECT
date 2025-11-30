@@ -7,12 +7,12 @@ CREATE TABLE IF NOT EXISTS usuario_admin (
     tipo_usuario VARCHAR(30) NOT NULL CHECK (tipo_usuario IN ('ADMIN'))
 );
 
--- Ajusta registros antigos
+-- Ajusta registros antigos para seguir a nova constraint
 UPDATE usuario_admin
 SET tipo_usuario = 'ADMIN'
 WHERE tipo_usuario = 'ADMINISTRADOR';
 
--- Ajusta a constraint
+-- Ajusta a constraint (caso exista)
 ALTER TABLE usuario_admin
 DROP CONSTRAINT IF EXISTS usuario_admin_tipo_usuario_check;
 
@@ -23,3 +23,8 @@ CHECK (tipo_usuario IN ('ADMIN'));
 -- Adiciona coluna de relacionamento com usuario
 ALTER TABLE usuario_admin
 ADD COLUMN IF NOT EXISTS id_usuario BIGINT REFERENCES usuario(id) ON DELETE CASCADE;
+
+-- Insere o admin padrão caso ainda não exista
+INSERT INTO usuario_admin (id, nome, email, senha, tipo_usuario)
+VALUES (1, 'Administrador Padrão', 'admin@codechella.com', '123456', 'ADMIN')
+ON CONFLICT (id) DO NOTHING;
