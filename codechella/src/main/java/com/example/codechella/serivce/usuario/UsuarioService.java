@@ -48,5 +48,7 @@ public class UsuarioService {
     }
 
     public Flux<UsuarioDTO> listarTodos() {
+        return usuarioRepository.findAll()
+                .map(UsuarioDTO::toDTO);
     }
 }
