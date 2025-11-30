@@ -19,8 +19,8 @@ public class EventoService {
     @Autowired
     private EventoRepository repository;
 
-    private void verificaUser(UserAdmin userAdmin){
-        if (userAdmin.getTipoUsuario() != TipoUsuario.ADMINISTRADOR){
+    private void verificaUserAdmin(UserAdmin userAdmin){
+        if (userAdmin.getTipoUsuario() != TipoUsuario.ADMIN){
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Apenas administradores podem fazer essa alteração");
         }
@@ -37,18 +37,24 @@ public class EventoService {
     }
 
     public Mono<EventoDTO> cadastrarEvento(UserAdmin userAdmin, EventoDTO dto) {
-        verificaUser(userAdmin);
+        verificaUserAdmin(userAdmin);
         var evento = dto.toEntity();
         evento.setStatusEvento(StatusEvento.ABERTO);
+        evento.setIdAdminCriador(userAdmin.getIdUsuario());
 
         return repository.save(evento).map(EventoDTO::toDto);
     }
 
     public Mono<EventoDTO> cancelarEvento(Long id, UserAdmin userAdmin) {
-        verificaUser(userAdmin);
+        verificaUserAdmin(userAdmin);
         return repository.findById(id)
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)))
                 .flatMap(evento -> {
+                    // Super Admin pode fazer qualquer coisa, Admin só seus próprios
+                    if (userAdmin.getTipoUsuario() == TipoUsuario.ADMIN && !evento.getIdAdminCriador().equals(userAdmin.getIdUsuario())) {
+                        return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN,
+                                "Você só pode cancelar eventos que criou"));
+                    }
                     evento.setStatusEvento(StatusEvento.FECHADO);
                     return repository.save(evento);
                 })
@@ -56,14 +62,20 @@ public class EventoService {
     }
 
     public Mono<EventoDTO> atualizarId(Long id, EventoDTO dto, UserAdmin userAdmin){
-        verificaUser(userAdmin);
+        verificaUserAdmin(userAdmin);
         return repository.findById(id)
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)))
                 .flatMap(evento -> {
+                    // Super Admin pode fazer qualquer coisa, Admin só seus próprios
+                    if (userAdmin.getTipoUsuario() == TipoUsuario.ADMIN && !evento.getIdAdminCriador().equals(userAdmin.getIdUsuario())) {
+                        return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN,
+                                "Você só pode atualizar eventos que criou"));
+                    }
                     evento.setTipo(dto.tipo());
                     evento.setNome(dto.nome());
                     evento.setData(dto.data());
                     evento.setDescricao(dto.descricao());
+                    evento.setNumeroIngressosDisponiveis(dto.numeroIngressosDisponiveis());
                     return repository.save(evento);
                 })
                 .map(EventoDTO::toDto);
@@ -76,10 +88,17 @@ public class EventoService {
     }
 
     public Mono<Void> excluir(Long id, UserAdmin userAdmin) {
-        verificaUser(userAdmin);
+        verificaUserAdmin(userAdmin);
 
         return repository.findById(id)
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)))
-                .flatMap(evento -> repository.delete(evento));
+                .flatMap(evento -> {
+                    // Super Admin pode fazer qualquer coisa, Admin só seus próprios
+                    if (userAdmin.getTipoUsuario() == TipoUsuario.ADMIN && !evento.getIdAdminCriador().equals(userAdmin.getIdUsuario())) {
+                        return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN,
+                                "Você só pode excluir eventos que criou"));
+                    }
+                    return repository.delete(evento);
+                });
     }
 }

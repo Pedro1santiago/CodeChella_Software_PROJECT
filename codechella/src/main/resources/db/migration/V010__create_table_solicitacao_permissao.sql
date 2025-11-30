@@ -1,0 +1,10 @@
+-- Status: PENDENTE, APROVADO, NEGADO
+CREATE TABLE solicitacao_permissao (
+    id BIGSERIAL PRIMARY KEY,
+    id_usuario BIGINT NOT NULL REFERENCES usuario(id) ON DELETE CASCADE,
+    tipo_permissao VARCHAR(30) NOT NULL CHECK (tipo_permissao IN ('ADMIN')),
+    status VARCHAR(30) NOT NULL DEFAULT 'PENDENTE' CHECK (status IN ('PENDENTE', 'APROVADO', 'NEGADO')),
+    motivo_negacao VARCHAR(500),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

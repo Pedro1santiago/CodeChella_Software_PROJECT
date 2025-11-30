@@ -2,9 +2,10 @@ package com.example.codechella.models.users;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
+import java.time.LocalDateTime;
 
 @Table("usuario")
-public class Usuario implements UserBase {
+public class Usuario {
 
     @Id
     private Long id;
@@ -12,14 +13,22 @@ public class Usuario implements UserBase {
     private String nome;
     private String email;
     private String senha;
-    private TipoUsuario tipoUsuario = TipoUsuario.USUARIO;
+    private TipoUsuario tipoUsuario = TipoUsuario.USER;
+    private LocalDateTime criadoEm;
 
-    public Usuario(){}
+    public Usuario() {}
 
-    public Usuario(Long id, String nome, String email, String senha, TipoUsuario tipoUsuario){}
+    public Usuario(Long id, String nome, String email, String senha, TipoUsuario tipoUsuario) {
+        this.id = id;
+        this.nome = nome;
+        this.email = email;
+        this.senha = senha;
+        this.tipoUsuario = tipoUsuario;
+        this.criadoEm = LocalDateTime.now();
+    }
 
-    @Override
-    public Long getIdUsuario() {
+    // Getters e Setters
+    public Long getId() {
         return id;
     }
 
@@ -27,39 +36,20 @@ public class Usuario implements UserBase {
         this.id = id;
     }
 
-    @Override
-    public String getNome() {
-        return nome;
-    }
+    public String getNome() { return nome; }
+    public void setNome(String nome){ this.nome = nome; }
 
-    public void setNome(String nome){
-        this.nome = nome;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email){ this.email = email; }
 
-    @Override
-    public String getEmail() {
-        return email;
-    }
+    public String getSenha() { return senha; }
+    public void setSenha(String senha){ this.senha = senha; }
 
-    public void setEmail(String email){
-        this.email = email;
-    }
-
-    @Override
-    public String getSenha() {
-        return senha;
-    }
-
-    public void setSenha(String senha){
-        this.senha = senha;
-    }
-
-    @Override
-    public TipoUsuario getTipoUsuario() {
-        return tipoUsuario;
-    }
-
+    public TipoUsuario getTipoUsuario() { return tipoUsuario; }
     public void setTipoUsuario(TipoUsuario tipoUsuario){
-        this.tipoUsuario = TipoUsuario.USUARIO;
+        this.tipoUsuario = tipoUsuario;
     }
+
+    public LocalDateTime getCriadoEm() { return criadoEm; }
+    public void setCriadoEm(LocalDateTime criadoEm){ this.criadoEm = criadoEm; }
 }

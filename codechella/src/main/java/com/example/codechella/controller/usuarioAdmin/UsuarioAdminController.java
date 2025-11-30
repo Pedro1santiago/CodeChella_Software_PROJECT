@@ -14,49 +14,45 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
-@RequestMapping("/usuario/Admin")
+@RequestMapping("/usuario/admin")
 public class UsuarioAdminController {
 
     @Autowired
-    EventoService eventoService;
+    private EventoService eventoService;
 
     @Autowired
-    UsuarioAdminService usuarioAdminService;
+    private UsuarioAdminService usuarioAdminService;
 
     @Autowired
-    IngressoService ingressoService;
+    private IngressoService ingressoService;
 
     @PostMapping("/cadastrar/evento")
-    public Mono<EventoDTO> cadastrar(@RequestBody CadastroEventoRequest request){
+    public Mono<EventoDTO> cadastrar(@RequestBody CadastroEventoRequest request) {
         return eventoService.cadastrarEvento(request.userAdmin(), request.eventoDTO());
     }
 
-    @GetMapping("/listarTodos/eventos")
-    public Flux<EventoDTO> listarEventos(){
+    @GetMapping("/eventos")
+    public Flux<EventoDTO> listarEventos() {
         return eventoService.listarTodos();
     }
 
-    @GetMapping("/listarTodos/usuarios")
-    public Flux<UsuarioAdminDTO> listarUsuarios(){
+    @GetMapping("/usuarios")
+    public Flux<UsuarioAdminDTO> listarUsuarios() {
         return usuarioAdminService.listarTodos();
     }
 
-    @GetMapping("/listarTodos/ingressos")
-    public Flux<IngressoDTO> listarIngressos(){
+    @GetMapping("/ingressos")
+    public Flux<IngressoDTO> listarIngressos() {
         return ingressoService.listarTodos();
     }
 
-
-
-    @DeleteMapping("/excluir/evento/{id}")
-    public Mono<Void> excluirEvento(@PathVariable Long id, @RequestBody UserAdmin userAdmin){
+    @DeleteMapping("/eventos/{id}")
+    public Mono<Void> excluirEvento(@PathVariable Long id, @RequestBody(required = false) UserAdmin userAdmin) {
         return eventoService.excluir(id, userAdmin);
     }
 
-    @DeleteMapping("/cancelar/ingresso/{id}")
-    public Mono<IngressoDTO> cancelarIngresso(Long id){
+    @PutMapping("/ingressos/cancelar/{id}")
+    public Mono<IngressoDTO> cancelarIngresso(@PathVariable Long id) {
         return ingressoService.cancelarIngresso(id);
     }
-
 }
-

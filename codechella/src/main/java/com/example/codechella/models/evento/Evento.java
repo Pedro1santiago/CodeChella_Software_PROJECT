@@ -15,6 +15,8 @@ public class Evento {
     private LocalDate data;
     private String descricao;
     private StatusEvento statusEvento;
+    private Long idAdminCriador;
+    private Integer numeroIngressosDisponiveis;
 
     // Getters
     public Long getId() {
@@ -36,6 +38,12 @@ public class Evento {
     public String getDescricao() {
         return descricao;
     }
+
+    public StatusEvento getStatusEvento(){return statusEvento;}
+
+    public Long getIdAdminCriador() { return idAdminCriador; }
+
+    public Integer getNumeroIngressosDisponiveis() { return numeroIngressosDisponiveis; }
  
     // Setters
     public void setId(Long id) {
@@ -58,6 +66,9 @@ public class Evento {
         this.descricao = descricao;
     }
 
-    public StatusEvento getStatusEvento(){return statusEvento;}
     public void setStatusEvento(StatusEvento statusEvento){this.statusEvento = statusEvento;}
+
+    public void setIdAdminCriador(Long idAdminCriador) { this.idAdminCriador = idAdminCriador; }
+
+    public void setNumeroIngressosDisponiveis(Integer numeroIngressosDisponiveis) { this.numeroIngressosDisponiveis = numeroIngressosDisponiveis; }
 }

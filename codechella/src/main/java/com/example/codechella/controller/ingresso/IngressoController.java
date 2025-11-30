@@ -1,6 +1,5 @@
 package com.example.codechella.controller.ingresso;
 
-
 import com.example.codechella.models.ingresso.IngressoDTO;
 import com.example.codechella.serivce.ingressoService.IngressoService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,15 +26,18 @@ public class IngressoController {
         return ingressoService.listarTodos();
     }
 
+    // Usuário normal compra ingresso
     @PostMapping("/comprar")
-    public Flux<IngressoDTO> venderIngresso(@RequestParam Long eventoId, @RequestParam int quantidade){
-        return ingressoService.venderIngresso(eventoId, quantidade);
+    public Flux<IngressoDTO> venderIngresso(
+            @RequestParam Long eventoId,
+            @RequestParam int quantidade,
+            @RequestHeader("usuario-id") Long usuarioId) {
+        return ingressoService.venderIngresso(eventoId, quantidade, usuarioId);
     }
 
-    @PutMapping("/Cancelar/{id}")
+    @PutMapping("/cancelar/{id}")
     public Mono<IngressoDTO> cancelarIngresso(@PathVariable Long id){
         return ingressoService.cancelarIngresso(id);
     }
-
 }
 
