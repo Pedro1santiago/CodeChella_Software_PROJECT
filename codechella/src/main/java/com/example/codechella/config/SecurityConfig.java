@@ -14,7 +14,7 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         http
-                .csrf(csrf -> csrf.disable()) // desativa CSRF
+                .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration config = new CorsConfiguration();
                     config.setAllowedOrigins(java.util.List.of(
@@ -30,7 +30,12 @@ public class SecurityConfig {
                 }))
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/auth/**").permitAll()
-                        .anyExchange().authenticated()         // todo o resto precisa de auth
+                        .pathMatchers("/permissoes/solicitar").permitAll()
+                        .pathMatchers("/permissoes/minhas-solicitacoes").permitAll()
+                        .pathMatchers("/permissoes/pendentes").hasRole("SUPER")
+                        .pathMatchers("/permissoes/**/aprovar").hasRole("SUPER")
+                        .pathMatchers("/permissoes/**/negar").hasRole("SUPER")
+                        .anyExchange().authenticated()
                 );
 
         return http.build();
