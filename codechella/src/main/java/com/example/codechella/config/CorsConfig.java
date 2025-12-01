@@ -15,10 +15,10 @@ public class CorsConfig {
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOriginPatterns(Arrays.asList(
+
+        config.setAllowedOrigins(Arrays.asList(
                 "http://localhost:5173",
-                "https://codechalle-front.vercel.app",
-                "https://*.vercel.app"
+                "https://codechalle-front.vercel.app"
         ));
 
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
@@ -26,7 +26,6 @@ public class CorsConfig {
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-
         source.registerCorsConfiguration("/**", config);
 
         return new CorsWebFilter(source);
