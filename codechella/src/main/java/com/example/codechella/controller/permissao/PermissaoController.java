@@ -3,7 +3,6 @@ package com.example.codechella.controller.permissao;
 import com.example.codechella.models.users.SolicitacaoPermissaoDTO;
 import com.example.codechella.models.users.SuperAdmin;
 import com.example.codechella.serivce.permissao.PermissaoService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -13,8 +12,11 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/permissoes")
 public class PermissaoController {
 
-    @Autowired
-    private PermissaoService permissaoService;
+    private final PermissaoService permissaoService;
+
+    public PermissaoController(PermissaoService permissaoService) {
+        this.permissaoService = permissaoService;
+    }
 
     // Usuário normal solicita permissão para virar admin
     @PostMapping("/solicitar")
@@ -32,9 +34,7 @@ public class PermissaoController {
     @GetMapping(value = "/pendentes", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<SolicitacaoPermissaoDTO> listarSolicitacoesPendentes(
             @RequestHeader("super-admin-id") Long superAdminId) {
-        SuperAdmin superAdmin = new SuperAdmin();
-        superAdmin.setIdSuperAdmin(superAdminId);
-        return permissaoService.listarSolicitacoesPendentes(superAdmin);
+        return permissaoService.listarSolicitacoesPendentes(superAdminId);
     }
 
     // Super Admin aprova solicitação
@@ -42,9 +42,7 @@ public class PermissaoController {
     public Mono<SolicitacaoPermissaoDTO> aprovarSolicitacao(
             @PathVariable Long id,
             @RequestHeader("super-admin-id") Long superAdminId) {
-        SuperAdmin superAdmin = new SuperAdmin();
-        superAdmin.setIdSuperAdmin(superAdminId);
-        return permissaoService.aprovarSolicitacao(id, superAdmin);
+        return permissaoService.aprovarSolicitacao(id, superAdminId);
     }
 
     // Super Admin nega solicitação
@@ -53,8 +51,6 @@ public class PermissaoController {
             @PathVariable Long id,
             @RequestHeader("super-admin-id") Long superAdminId,
             @RequestParam(required = false, defaultValue = "") String motivo) {
-        SuperAdmin superAdmin = new SuperAdmin();
-        superAdmin.setIdSuperAdmin(superAdminId);
-        return permissaoService.negarSolicitacao(id, motivo, superAdmin);
+        return permissaoService.negarSolicitacao(id, motivo, superAdminId);
     }
 }

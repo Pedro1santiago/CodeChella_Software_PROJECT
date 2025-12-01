@@ -13,21 +13,20 @@ public class Usuario {
     private String nome;
     private String email;
     private String senha;
-    private TipoUsuario tipoUsuario = TipoUsuario.USER;
+    private TipoUsuario tipoUsuario;
     private LocalDateTime criadoEm;
 
     public Usuario() {}
 
-    public Usuario(Long id, String nome, String email, String senha, TipoUsuario tipoUsuario) {
+    public Usuario(Long id, String nome, String email, String senha, TipoUsuario tipoUsuario, LocalDateTime criadoEm) {
         this.id = id;
         this.nome = nome;
         this.email = email;
         this.senha = senha;
         this.tipoUsuario = tipoUsuario;
-        this.criadoEm = LocalDateTime.now();
+        this.criadoEm = criadoEm;
     }
 
-    // Getters e Setters
     public Long getId() {
         return id;
     }

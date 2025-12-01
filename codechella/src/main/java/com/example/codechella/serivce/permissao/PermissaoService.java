@@ -1,14 +1,9 @@
 package com.example.codechella.serivce.permissao;
 
-import com.example.codechella.models.users.SolicitacaoPermissao;
-import com.example.codechella.models.users.SolicitacaoPermissaoDTO;
-import com.example.codechella.models.users.StatusPermissao;
-import com.example.codechella.models.users.SuperAdmin;
-import com.example.codechella.models.users.TipoPermissao;
-import com.example.codechella.models.users.TipoUsuario;
-import com.example.codechella.models.users.Usuario;
+import com.example.codechella.models.users.*;
 import com.example.codechella.repository.SolicitacaoPermissaoRepository;
 import com.example.codechella.repository.UsuarioRepository;
+import com.example.codechella.repository.SuperAdminRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -25,11 +20,14 @@ public class PermissaoService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    private Mono<Void> validarSuperAdmin(SuperAdmin superAdmin) {
-        if (superAdmin == null || superAdmin.getTipoUsuario() != TipoUsuario.SUPER) {
-            return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso negado. Super Admin requerido."));
-        }
-        return Mono.empty();
+    @Autowired
+    private SuperAdminRepository superAdminRepository;
+
+    private Mono<Void> validarSuperAdminPorId(Long superAdminId) {
+        return superAdminRepository.findById(superAdminId)
+                .filter(s -> s.getTipoUsuario() == TipoUsuario.SUPER)
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso negado. Super Admin requerido.")))
+                .then();
     }
 
     // Usuário Normal solicita permissão para virar Admin
@@ -47,17 +45,15 @@ public class PermissaoService {
                         .map(usuario -> SolicitacaoPermissaoDTO.fromEntity(solicitacao, usuario.getNome())));
     }
 
-    // Listar solicitações pendentes
-    public Flux<SolicitacaoPermissaoDTO> listarSolicitacoesPendentes(SuperAdmin superAdmin) {
-        return validarSuperAdmin(superAdmin)
+    public Flux<SolicitacaoPermissaoDTO> listarSolicitacoesPendentes(Long superAdminId) {
+        return validarSuperAdminPorId(superAdminId)
                 .thenMany(solicitacaoRepository.findByStatus(StatusPermissao.PENDENTE)
                         .flatMap(solicitacao -> usuarioRepository.findById(solicitacao.getIdUsuario())
                                 .map(usuario -> SolicitacaoPermissaoDTO.fromEntity(solicitacao, usuario.getNome()))));
     }
 
-    // Aprovar solicitação de permissão
-    public Mono<SolicitacaoPermissaoDTO> aprovarSolicitacao(Long idSolicitacao, SuperAdmin superAdmin) {
-        return validarSuperAdmin(superAdmin)
+    public Mono<SolicitacaoPermissaoDTO> aprovarSolicitacao(Long idSolicitacao, Long superAdminId) {
+        return validarSuperAdminPorId(superAdminId)
                 .then(solicitacaoRepository.findById(idSolicitacao))
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitação não encontrada")))
                 .flatMap(solicitacao -> {
@@ -75,9 +71,8 @@ public class PermissaoService {
                 });
     }
 
-    // Negar solicitação de permissão
-    public Mono<SolicitacaoPermissaoDTO> negarSolicitacao(Long idSolicitacao, String motivo, SuperAdmin superAdmin) {
-        return validarSuperAdmin(superAdmin)
+    public Mono<SolicitacaoPermissaoDTO> negarSolicitacao(Long idSolicitacao, String motivo, Long superAdminId) {
+        return validarSuperAdminPorId(superAdminId)
                 .then(solicitacaoRepository.findById(idSolicitacao))
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitação não encontrada")))
                 .flatMap(solicitacao -> {
@@ -92,7 +87,6 @@ public class PermissaoService {
                 });
     }
 
-    // Listar solicitações de um usuário específico
     public Flux<SolicitacaoPermissaoDTO> minhasSolicitacoes(Long idUsuario) {
         return solicitacaoRepository.findByIdUsuario(idUsuario)
                 .flatMap(solicitacao -> usuarioRepository.findById(idUsuario)

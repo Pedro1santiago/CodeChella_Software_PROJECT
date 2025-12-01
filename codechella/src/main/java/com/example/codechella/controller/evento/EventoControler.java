@@ -1,7 +1,6 @@
 package com.example.codechella.controller.evento;
 
 import com.example.codechella.models.evento.EventoDTO;
-import com.example.codechella.models.users.UserAdmin;
 import com.example.codechella.serivce.eventoService.EventoService;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -30,8 +29,8 @@ public class EventoControler {
 
     @GetMapping(value = "/categoria/{tipo}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<EventoDTO> obterPorTipo(@PathVariable String tipo) {
-        return Flux.merge(service.obterPorTipo(tipo), eventoSink.asFlux())
-                .delayElements(Duration.ofSeconds(4));
+        // importante: no service você deve filtrar eventos por tipo se quiser SSE por tipo
+        return service.obterPorTipo(tipo);
     }
 
     @GetMapping("/{id}")
@@ -44,10 +43,7 @@ public class EventoControler {
             @RequestBody EventoDTO dto,
             @RequestHeader("admin-id") Long adminId
     ) {
-        UserAdmin userAdmin = new UserAdmin();
-        userAdmin.setIdUsuario(adminId);
-
-        return service.cadastrarEvento(userAdmin, dto)
+        return service.cadastrarEvento(adminId, dto)
                 .doOnSuccess(eventoSink::tryEmitNext);
     }
 
@@ -56,10 +52,7 @@ public class EventoControler {
             @PathVariable Long id,
             @RequestHeader("admin-id") Long adminId
     ) {
-        UserAdmin userAdmin = new UserAdmin();
-        userAdmin.setIdUsuario(adminId);
-
-        return service.excluir(id, userAdmin);
+        return service.excluir(id, adminId);
     }
 
     @PutMapping("/{id}")
@@ -68,9 +61,6 @@ public class EventoControler {
             @RequestBody EventoDTO dto,
             @RequestHeader("admin-id") Long adminId
     ) {
-        UserAdmin userAdmin = new UserAdmin();
-        userAdmin.setIdUsuario(adminId);
-
-        return service.atualizarId(id, dto, userAdmin);
+        return service.atualizarId(id, dto, adminId);
     }
 }

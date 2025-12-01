@@ -12,7 +12,7 @@ public class SuperAdmin {
     private String nome;
     private String email;
     private String senha;
-    private TipoUsuario tipoUsuario = TipoUsuario.SUPER;
+    private TipoUsuario tipoUsuario;
 
     public SuperAdmin() {}
 

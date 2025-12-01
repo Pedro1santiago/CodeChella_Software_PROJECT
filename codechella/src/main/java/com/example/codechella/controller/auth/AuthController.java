@@ -1,14 +1,13 @@
 package com.example.codechella.controller.auth;
 
-
+import com.example.codechella.models.users.LoginRequest;
 import com.example.codechella.models.users.SuperAdminDTO;
-import com.example.codechella.models.users.UsuarioDTO;
+import com.example.codechella.models.users.SuperAdminLoginRequest;
+import com.example.codechella.models.users.UsuarioRegisterRequest;
+import com.example.codechella.models.users.UsuarioResponseDTO;
 import com.example.codechella.serivce.superAdminAuth.SuperAdminAuthService;
 import com.example.codechella.serivce.usuario.UsuarioService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -24,12 +23,12 @@ public class AuthController {
     }
 
     @PostMapping("/usuario/register")
-    public Mono<UsuarioDTO> registerUsuario(@RequestBody UsuarioDTO usuario) {
-        return usuarioService.cadastrar(usuario);
+    public Mono<UsuarioResponseDTO> registerUsuario(@RequestBody UsuarioRegisterRequest request) {
+        return usuarioService.cadastrar(request);
     }
 
     @PostMapping("/usuario/login")
-    public Mono<UsuarioDTO> loginUsuario(@RequestBody LoginRequest login) {
+    public Mono<UsuarioResponseDTO> loginUsuario(@RequestBody LoginRequest login) {
         return usuarioService.login(login);
     }
 

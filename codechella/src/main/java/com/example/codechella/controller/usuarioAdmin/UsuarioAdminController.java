@@ -2,13 +2,11 @@ package com.example.codechella.controller.usuarioAdmin;
 
 import com.example.codechella.models.evento.EventoDTO;
 import com.example.codechella.models.ingresso.IngressoDTO;
-import com.example.codechella.models.users.CadastroEventoRequest;
-import com.example.codechella.models.users.UserAdmin;
+import com.example.codechella.models.evento.CadastroEventoRequest;
 import com.example.codechella.models.users.UsuarioAdminDTO;
 import com.example.codechella.serivce.eventoService.EventoService;
 import com.example.codechella.serivce.ingressoService.IngressoService;
 import com.example.codechella.serivce.usuarioAdmin.UsuarioAdminService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -17,18 +15,20 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/usuario/admin")
 public class UsuarioAdminController {
 
-    @Autowired
-    private EventoService eventoService;
+    private final EventoService eventoService;
+    private final UsuarioAdminService usuarioAdminService;
+    private final IngressoService ingressoService;
 
-    @Autowired
-    private UsuarioAdminService usuarioAdminService;
-
-    @Autowired
-    private IngressoService ingressoService;
+    public UsuarioAdminController(EventoService eventoService, UsuarioAdminService usuarioAdminService, IngressoService ingressoService) {
+        this.eventoService = eventoService;
+        this.usuarioAdminService = usuarioAdminService;
+        this.ingressoService = ingressoService;
+    }
 
     @PostMapping("/cadastrar/evento")
-    public Mono<EventoDTO> cadastrar(@RequestBody CadastroEventoRequest request) {
-        return eventoService.cadastrarEvento(request.userAdmin(), request.eventoDTO());
+    public Mono<EventoDTO> cadastrar(@RequestBody CadastroEventoRequest request,
+                                     @RequestHeader("admin-id") Long adminId) {
+        return eventoService.cadastrarEvento(adminId, request.eventoDTO());
     }
 
     @GetMapping("/eventos")
@@ -47,8 +47,8 @@ public class UsuarioAdminController {
     }
 
     @DeleteMapping("/eventos/{id}")
-    public Mono<Void> excluirEvento(@PathVariable Long id, @RequestBody(required = false) UserAdmin userAdmin) {
-        return eventoService.excluir(id, userAdmin);
+    public Mono<Void> excluirEvento(@PathVariable Long id, @RequestHeader("admin-id") Long adminId) {
+        return eventoService.excluir(id, adminId);
     }
 
     @PutMapping("/ingressos/cancelar/{id}")

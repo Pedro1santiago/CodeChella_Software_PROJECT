@@ -12,11 +12,11 @@ public class UserAdmin {
     private String nome;
     private String email;
     private String senha;
-    private TipoUsuario tipoUsuario = TipoUsuario.ADMIN;
+    private TipoUsuario tipoUsuario;
 
-    public UserAdmin(){}
+    public UserAdmin() {}
 
-    public UserAdmin(Long idUsuario, String nome, String email, String senha, TipoUsuario tipoUsuario){
+    public UserAdmin(Long idUsuario, String nome, String email, String senha, TipoUsuario tipoUsuario) {
         this.idUsuario = idUsuario;
         this.nome = nome;
         this.email = email;
