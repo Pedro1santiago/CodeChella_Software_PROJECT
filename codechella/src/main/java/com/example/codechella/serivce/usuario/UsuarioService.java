@@ -14,11 +14,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 
 @Service
 public class UsuarioService {
+
+    private static final Logger log = LoggerFactory.getLogger(UsuarioService.class);
 
     @Autowired
     private UsuarioRepository usuarioRepository;
@@ -27,21 +31,31 @@ public class UsuarioService {
     private PasswordEncoder passwordEncoder;
 
     public Mono<UsuarioResponseDTO> cadastrar(UsuarioRegisterRequest req) {
+        log.info("[CADASTRO] Recebendo request: {}", req);
+
         if (!req.senha().equals(req.confirmarSenha())) {
+            log.warn("[CADASTRO] Senhas não coincidem para email: {}", req.email());
             return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "As senhas não coincidem"));
         }
 
         return usuarioRepository.findByEmail(req.email())
-                .flatMap(u -> Mono.<UsuarioResponseDTO>error(
-                        new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email já cadastrado")
-                ))
+                .flatMap(u -> {
+                    log.warn("[CADASTRO] Email já cadastrado: {}", req.email());
+                    return Mono.<UsuarioResponseDTO>error(
+                            new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email já cadastrado")
+                    );
+                })
                 .switchIfEmpty(Mono.defer(() -> {
                     Usuario usuario = UsuarioMapper.toEntity(req);
                     usuario.setTipoUsuario(TipoUsuario.USER);
                     usuario.setSenha(passwordEncoder.encode(req.senha()));
                     usuario.setCriadoEm(LocalDateTime.now());
 
+                    log.info("[CADASTRO] Criando usuário: {}", usuario.getEmail());
+
                     return usuarioRepository.save(usuario)
+                            .doOnSuccess(u -> log.info("[CADASTRO] Usuário cadastrado com sucesso: {}", u.getEmail()))
+                            .doOnError(err -> log.error("[CADASTRO] Erro ao salvar usuário", err))
                             .map(UsuarioMapper::toDTO);
                 }));
     }
