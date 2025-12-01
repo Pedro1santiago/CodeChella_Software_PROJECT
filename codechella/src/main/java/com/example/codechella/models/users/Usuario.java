@@ -1,6 +1,7 @@
 package com.example.codechella.models.users;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 import java.time.LocalDateTime;
 
@@ -14,6 +15,8 @@ public class Usuario {
     private String email;
     private String senha;
     private TipoUsuario tipoUsuario;
+
+    @Column("created_at")
     private LocalDateTime criadoEm;
 
     public Usuario() {}
