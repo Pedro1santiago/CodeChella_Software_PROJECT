@@ -1,7 +1,9 @@
 package com.example.codechella.models.users;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
+
 import java.time.LocalDateTime;
 
 @Table("solicitacao_permissao")
@@ -9,11 +11,23 @@ public class SolicitacaoPermissao {
 
     @Id
     private Long id;
+
+    @Column("id_usuario")
     private Long idUsuario;
+
+    @Column("tipo_permissao")
     private TipoPermissao tipoPermissao;
+
+    @Column("status")
     private StatusPermissao status;
+
+    @Column("motivo_negacao")
     private String motivoNegacao;
+
+    @Column("created_at")
     private LocalDateTime criadoEm;
+
+    @Column("updated_at")
     private LocalDateTime atualizadoEm;
 
     public SolicitacaoPermissao() {}
@@ -26,7 +40,6 @@ public class SolicitacaoPermissao {
         this.atualizadoEm = LocalDateTime.now();
     }
 
-    // Getters e Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
