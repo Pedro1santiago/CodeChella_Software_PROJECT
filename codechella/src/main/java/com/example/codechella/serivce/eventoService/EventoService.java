@@ -19,8 +19,13 @@ import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 public class EventoService {
+
+    private static final Logger log = LoggerFactory.getLogger(EventoService.class);
 
     @Autowired
     private EventoRepository repository;
@@ -33,11 +38,9 @@ public class EventoService {
 
     // Valida se é ADMIN ou SUPER
     private Mono<TipoUsuario> validarCriador(Long usuarioId) {
-        // procura super admin
         return superAdminRepository.findById(usuarioId)
                 .map(SuperAdmin::getTipoUsuario)
                 .switchIfEmpty(
-                        // procura admin comum
                         usuarioRepository.findById(usuarioId)
                                 .map(Usuario::getTipoUsuario)
                 )
@@ -68,7 +71,7 @@ public class EventoService {
                 .flatMap(tipo -> {
                     Evento evento = dto.toEntity();
                     evento.setStatusEvento(StatusEvento.ABERTO);
-                    evento.setIdAdminCriador(usuarioId); // salva o criador
+                    evento.setIdAdminCriador(usuarioId);
                     return repository.save(evento).map(EventoDTO::toDto);
                 });
     }
@@ -79,8 +82,6 @@ public class EventoService {
                 .flatMap(tipo -> repository.findById(id)
                         .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento não encontrado")))
                         .flatMap(evento -> {
-
-                            // super admin pode tudo
                             if (tipo != TipoUsuario.SUPER &&
                                     !evento.getIdAdminCriador().equals(usuarioId)) {
                                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você só pode atualizar eventos que criou");
@@ -97,20 +98,36 @@ public class EventoService {
     }
 
     // Cancelar evento
-    public Mono<EventoDTO> cancelarEvento(Long id, Long usuarioId) {
-        return validarCriador(usuarioId)
-                .flatMap(tipo -> repository.findById(id)
-                        .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento não encontrado")))
-                        .flatMap(evento -> {
+    public Mono<EventoDTO> cancelarEvento(Long eventoId, Long usuarioId) {
+        log.info("[CANCELAR-SERVICE] Iniciando - eventoId: {}, usuarioId: {}", eventoId, usuarioId);
 
-                            if (tipo != TipoUsuario.SUPER &&
-                                    !evento.getIdAdminCriador().equals(usuarioId)) {
-                                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você só pode cancelar eventos que criou");
+        return validarCriador(usuarioId)
+                .doOnNext(tipo -> log.info("[CANCELAR-SERVICE] Tipo de usuário validado: {}", tipo))
+                .flatMap(tipo -> repository.findById(eventoId)
+                        .doOnNext(evento -> log.info("[CANCELAR-SERVICE] Evento encontrado - id: {}, criador: {}, status: {}",
+                                evento.getId(), evento.getIdAdminCriador(), evento.getStatusEvento()))
+                        .switchIfEmpty(Mono.defer(() -> {
+                            log.warn("[CANCELAR-SERVICE] Evento {} não encontrado", eventoId);
+                            return Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento não encontrado"));
+                        }))
+                        .flatMap(evento -> {
+                            log.info("[CANCELAR-SERVICE] Validando permissões - tipo: {}, criador: {}, usuarioId: {}",
+                                    tipo, evento.getIdAdminCriador(), usuarioId);
+
+                            // Super admin pode cancelar qualquer evento
+                            if (tipo != TipoUsuario.SUPER && !evento.getIdAdminCriador().equals(usuarioId)) {
+                                log.warn("[CANCELAR-SERVICE] Usuário {} não tem permissão para cancelar evento {}", usuarioId, eventoId);
+                                return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "Você só pode cancelar eventos que criou"));
                             }
 
+                            log.info("[CANCELAR-SERVICE] Alterando status para CANCELADO");
                             evento.setStatusEvento(StatusEvento.CANCELADO);
                             return repository.save(evento).map(EventoDTO::toDto);
-                        }));
+                        })
+                )
+                .doOnSuccess(dto -> log.info("[CANCELAR-SERVICE] Evento {} cancelado com sucesso", eventoId))
+                .doOnError(e -> log.error("[CANCELAR-SERVICE] Erro ao cancelar evento {}: {} - {}",
+                        eventoId, e.getClass().getSimpleName(), e.getMessage(), e));
     }
 
     // excluir evento
@@ -119,12 +136,10 @@ public class EventoService {
                 .flatMap(tipo -> repository.findById(id)
                         .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento não encontrado")))
                         .flatMap(evento -> {
-
                             if (tipo != TipoUsuario.SUPER &&
                                     !evento.getIdAdminCriador().equals(usuarioId)) {
                                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você só pode excluir eventos que criou");
                             }
-
                             return repository.delete(evento);
                         }));
     }

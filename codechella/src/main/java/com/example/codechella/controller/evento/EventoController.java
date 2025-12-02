@@ -6,15 +6,19 @@ import com.example.codechella.models.users.TipoUsuario;
 import com.example.codechella.serivce.eventoService.EventoService;
 import com.example.codechella.serivce.superAdminService.SuperAdminService;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @RestController
 @RequestMapping("/eventos")
 public class EventoController {
+
+    private static final Logger log = LoggerFactory.getLogger(EventoController.class);
 
     private final EventoService service;
     private final SuperAdminService superAdminService;
@@ -24,13 +28,11 @@ public class EventoController {
         this.superAdminService = superAdminService;
     }
 
-    // Lista todos os eventos (JSON normal)
     @GetMapping
     public Flux<EventoDTO> listarTodos() {
         return service.listarTodos();
     }
 
-    // Lista eventos por categoria
     @GetMapping("/categoria/{tipo}")
     public Flux<EventoDTO> obterPorTipo(@PathVariable TipoEvento tipo) {
         return service.obterPorTipo(tipo)
@@ -39,22 +41,18 @@ public class EventoController {
                 ));
     }
 
-    // Busca evento por ID
     @GetMapping("/{id}")
     public Mono<EventoDTO> buscarPorId(@PathVariable Long id) {
         return service.buscarPorId(id);
     }
 
-    // Criação de evento — Admin e Super Admin podem
     @PostMapping
     public Mono<EventoDTO> cadastrar(
             @RequestBody EventoDTO dto,
             @RequestHeader("Authorization") String authHeader
     ) {
-        // extrai id do token
         Long usuarioId = superAdminService.extrairIdSuperAdminDoHeader(authHeader);
 
-        // verifica se é SUPER ou ADMIN
         return superAdminService.obterTipoDoUsuario(usuarioId)
                 .flatMap(tipo -> {
                     if (tipo != TipoUsuario.ADMIN && tipo != TipoUsuario.SUPER) {
@@ -64,21 +62,25 @@ public class EventoController {
                 });
     }
 
-    // Cancelar evento — Admin só se for criador, Super pode qualquer
     @PatchMapping("/{id}/cancelar")
-    public Mono<EventoDTO> cancelar(
-            @PathVariable Long id,
-            @RequestHeader("Authorization") String authHeader
-    ) {
+    public Mono<EventoDTO> cancelar(@PathVariable Long id, @RequestHeader("Authorization") String authHeader) {
+        log.info("[CANCELAR-CONTROLLER] Iniciando - eventoId: {}", id);
 
-        Long usuarioId = superAdminService.extrairIdSuperAdminDoHeader(authHeader);
+        try {
+            Long usuarioId = superAdminService.extrairIdSuperAdminDoHeader(authHeader);
+            log.info("[CANCELAR-CONTROLLER] UsuarioId extraído: {}", usuarioId);
 
-
-        return superAdminService.obterTipoDoUsuario(usuarioId)
-                .flatMap(tipo -> service.cancelarEvento(id, usuarioId));
+            return superAdminService.obterTipoDoUsuario(usuarioId)
+                    .doOnNext(tipo -> log.info("[CANCELAR-CONTROLLER] Tipo: {}", tipo))
+                    .flatMap(tipo -> service.cancelarEvento(id, usuarioId))
+                    .doOnSuccess(dto -> log.info("[CANCELAR-CONTROLLER] Sucesso - eventoId: {}", id))
+                    .doOnError(e -> log.error("[CANCELAR-CONTROLLER] Erro: {}", e.getMessage(), e));
+        } catch (Exception e) {
+            log.error("[CANCELAR-CONTROLLER] Exceção ao extrair token: {}", e.getMessage(), e);
+            return Mono.error(e);
+        }
     }
 
-    // Excluir evento — Admin e Super Admin podem
     @DeleteMapping("/{id}")
     public Mono<Void> excluir(
             @PathVariable Long id,
@@ -95,7 +97,6 @@ public class EventoController {
                 });
     }
 
-    // Atualizar evento — Admin e Super Admin podem
     @PutMapping("/{id}")
     public Mono<EventoDTO> atualizar(
             @PathVariable Long id,
