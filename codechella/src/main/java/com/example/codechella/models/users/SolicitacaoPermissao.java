@@ -21,6 +21,9 @@ public class SolicitacaoPermissao {
     @Column("status")
     private StatusPermissao status;
 
+    @Column("motivo")
+    private String motivo;
+
     @Column("motivo_negacao")
     private String motivoNegacao;
 
@@ -51,6 +54,9 @@ public class SolicitacaoPermissao {
 
     public StatusPermissao getStatus() { return status; }
     public void setStatus(StatusPermissao status) { this.status = status; }
+
+    public String getMotivo() { return motivo; }
+    public void setMotivo(String motivo) { this.motivo = motivo; }
 
     public String getMotivoNegacao() { return motivoNegacao; }
     public void setMotivoNegacao(String motivoNegacao) { this.motivoNegacao = motivoNegacao; }

@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/permissoes")
 public class PermissaoController {
@@ -17,8 +19,11 @@ public class PermissaoController {
     }
 
     @PostMapping("/solicitar")
-    public Mono<SolicitacaoPermissaoDTO> solicitarPermissaoAdmin(@RequestHeader("usuario-id") Long idUsuario) {
-        return permissaoService.solicitarPermissaoAdmin(idUsuario);
+    public Mono<SolicitacaoPermissaoDTO> solicitarPermissaoAdmin(
+            @RequestHeader("usuario-id") Long idUsuario,
+            @RequestBody(required = false) Map<String, String> body) {
+        String motivo = body != null ? body.getOrDefault("motivo", "") : "";
+        return permissaoService.solicitarPermissaoAdmin(idUsuario, motivo);
     }
 
     @GetMapping("/minhas-solicitacoes")
@@ -35,12 +40,12 @@ public class PermissaoController {
 
         if (tokenQuery != null && !tokenQuery.isEmpty()) {
             token = tokenQuery;
-            System.out.println("🔵 Token recebido via query string: " + token.substring(0, Math.min(token.length(), 20)) + "...");
+            System.out.println("Token recebido via query string: " + token.substring(0, Math.min(token.length(), 20)) + "...");
         } else if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
-            System.out.println("🔵 Token recebido via Authorization header: " + token.substring(0, Math.min(token.length(), 20)) + "...");
+            System.out.println("Token recebido via Authorization header: " + token.substring(0, Math.min(token.length(), 20)) + "...");
         } else {
-            System.out.println("⚠️ Nenhum token recebido na requisição");
+            System.out.println("Nenhum token recebido na requisição");
             throw new RuntimeException("Token JWT é necessário");
         }
 

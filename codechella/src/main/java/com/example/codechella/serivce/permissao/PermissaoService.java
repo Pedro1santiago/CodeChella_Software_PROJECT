@@ -58,7 +58,7 @@ public class PermissaoService {
         }
     }
 
-    public Mono<SolicitacaoPermissaoDTO> solicitarPermissaoAdmin(Long idUsuario) {
+    public Mono<SolicitacaoPermissaoDTO> solicitarPermissaoAdmin(Long idUsuario, String motivo) {
         return usuarioRepository.findById(idUsuario)
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)))
                 .flatMap(usuario -> {
@@ -66,17 +66,17 @@ public class PermissaoService {
                         return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST));
                     }
                     SolicitacaoPermissao solicitacao = new SolicitacaoPermissao(idUsuario, TipoPermissao.ADMIN);
-                    return solicitacaoRepository.save(solicitacao);
-                })
-                .flatMap(solicitacao -> usuarioRepository.findById(idUsuario)
-                        .map(usuario -> SolicitacaoPermissaoDTO.fromEntity(solicitacao, usuario.getNome())));
+                    solicitacao.setMotivo(motivo);
+                    return solicitacaoRepository.save(solicitacao)
+                            .map(saved -> SolicitacaoPermissaoDTO.fromEntity(saved, usuario.getNome(), usuario.getEmail()));
+                });
     }
 
     public Flux<SolicitacaoPermissaoDTO> listarSolicitacoesPendentes(Long superAdminId) {
         return validarSuperAdminPorId(superAdminId)
                 .thenMany(solicitacaoRepository.findByStatus(StatusPermissao.PENDENTE)
                         .flatMap(solicitacao -> usuarioRepository.findById(solicitacao.getIdUsuario())
-                                .map(usuario -> SolicitacaoPermissaoDTO.fromEntity(solicitacao, usuario.getNome()))));
+                                .map(usuario -> SolicitacaoPermissaoDTO.fromEntity(solicitacao, usuario.getNome(), usuario.getEmail()))));
     }
 
     public Mono<SolicitacaoPermissaoDTO> aprovarSolicitacao(Long idSolicitacao, Long superAdminId) {
@@ -93,7 +93,7 @@ public class PermissaoService {
                                     .flatMap(usuario -> {
                                         usuario.setTipoUsuario(TipoUsuario.ADMIN);
                                         return usuarioRepository.save(usuario)
-                                                .map(u -> SolicitacaoPermissaoDTO.fromEntity(solicitacaoAtualizada, u.getNome()));
+                                                .map(u -> SolicitacaoPermissaoDTO.fromEntity(solicitacaoAtualizada, u.getNome(), u.getEmail()));
                                     }));
                 });
     }
@@ -110,13 +110,13 @@ public class PermissaoService {
                     solicitacao.setMotivoNegacao(motivo);
                     return solicitacaoRepository.save(solicitacao)
                             .flatMap(solicitacaoAtualizada -> usuarioRepository.findById(solicitacaoAtualizada.getIdUsuario())
-                                    .map(usuario -> SolicitacaoPermissaoDTO.fromEntity(solicitacaoAtualizada, usuario.getNome())));
+                                    .map(usuario -> SolicitacaoPermissaoDTO.fromEntity(solicitacaoAtualizada, usuario.getNome(), usuario.getEmail())));
                 });
     }
 
     public Flux<SolicitacaoPermissaoDTO> minhasSolicitacoes(Long idUsuario) {
         return solicitacaoRepository.findByIdUsuario(idUsuario)
                 .flatMap(solicitacao -> usuarioRepository.findById(idUsuario)
-                        .map(usuario -> SolicitacaoPermissaoDTO.fromEntity(solicitacao, usuario.getNome())));
+                        .map(usuario -> SolicitacaoPermissaoDTO.fromEntity(solicitacao, usuario.getNome(), usuario.getEmail())));
     }
 }
