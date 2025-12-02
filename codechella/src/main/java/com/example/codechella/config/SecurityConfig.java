@@ -1,5 +1,6 @@
 package com.example.codechella.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
@@ -11,6 +12,12 @@ import org.springframework.web.cors.CorsConfiguration;
 @EnableWebFluxSecurity
 public class SecurityConfig {
 
+    private final String secretKey;
+
+    public SecurityConfig(@Value("${jwt.secret}") String secretKey) {
+        this.secretKey = secretKey;
+    }
+
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         http
@@ -21,9 +28,7 @@ public class SecurityConfig {
                             "http://localhost:5173",
                             "https://codechalle-front.vercel.app"
                     ));
-                    config.setAllowedMethods(java.util.List.of(
-                            "GET","POST","PUT","DELETE","PATCH","OPTIONS"
-                    ));
+                    config.setAllowedMethods(java.util.List.of("GET","POST","PUT","DELETE","PATCH","OPTIONS"));
                     config.setAllowedHeaders(java.util.List.of("*"));
                     config.setAllowCredentials(true);
                     return config;
@@ -39,5 +44,9 @@ public class SecurityConfig {
                 );
 
         return http.build();
+    }
+
+    public String getSecretKey() {
+        return secretKey;
     }
 }
