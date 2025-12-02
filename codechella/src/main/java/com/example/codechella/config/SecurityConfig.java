@@ -28,10 +28,12 @@ public class SecurityConfig {
 
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter(secretKey);
 
-        ReactiveAuthenticationManager authenticationManager = authentication -> Mono.just(authentication);
+        ReactiveAuthenticationManager authenticationManager = authentication ->
+                Mono.just(authentication);
 
         AuthenticationWebFilter jwtFilter = new AuthenticationWebFilter(authenticationManager);
         jwtFilter.setServerAuthenticationConverter(converter);
+        jwtFilter.setSecurityContextRepository(NoOpServerSecurityContextRepository.getInstance());
 
         http
                 .csrf(csrf -> csrf.disable())
