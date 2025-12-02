@@ -1,6 +1,7 @@
 package com.example.codechella.models.evento;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.LocalDate;
@@ -14,11 +15,13 @@ public class Evento {
     private String nome;
     private LocalDate data;
     private String descricao;
+
+    @Column("evento_status")
     private StatusEvento statusEvento;
+
     private Long idAdminCriador;
     private Integer numeroIngressosDisponiveis;
 
-    // Getters
     public Long getId() {
         return id;
     }
