@@ -17,19 +17,16 @@ public class PermissaoController {
         this.permissaoService = permissaoService;
     }
 
-    // Usuário normal solicita permissão para virar admin
     @PostMapping("/solicitar")
     public Mono<SolicitacaoPermissaoDTO> solicitarPermissaoAdmin(@RequestHeader("usuario-id") Long idUsuario) {
         return permissaoService.solicitarPermissaoAdmin(idUsuario);
     }
 
-    // Listar minhas solicitações
     @GetMapping("/minhas-solicitacoes")
     public Flux<SolicitacaoPermissaoDTO> minhasSolicitacoes(@RequestHeader("usuario-id") Long idUsuario) {
         return permissaoService.minhasSolicitacoes(idUsuario);
     }
 
-    // Super Admin lista solicitações pendentes
     @GetMapping(value = "/pendentes", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<SolicitacaoPermissaoDTO> listarSolicitacoesPendentes(
             @RequestParam(value = "token", required = false) String tokenQuery,
@@ -43,16 +40,10 @@ public class PermissaoController {
             token = authHeader.substring(7);
         }
 
-        if (token == null || token.isEmpty()) {
-            throw new IllegalArgumentException("Token JWT não fornecido");
-        }
-
         Long superAdminId = permissaoService.getSuperAdminIdFromToken(token);
-
         return permissaoService.listarSolicitacoesPendentes(superAdminId);
     }
 
-    // Super Admin aprova solicitação
     @PutMapping("/{id}/aprovar")
     public Mono<SolicitacaoPermissaoDTO> aprovarSolicitacao(
             @PathVariable Long id,
@@ -60,7 +51,6 @@ public class PermissaoController {
         return permissaoService.aprovarSolicitacao(id, superAdminId);
     }
 
-    // Super Admin nega solicitação
     @PutMapping("/{id}/negar")
     public Mono<SolicitacaoPermissaoDTO> negarSolicitacao(
             @PathVariable Long id,

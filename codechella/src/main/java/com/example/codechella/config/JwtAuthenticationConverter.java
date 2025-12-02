@@ -2,7 +2,6 @@ package com.example.codechella.config;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -29,8 +28,10 @@ public class JwtAuthenticationConverter implements ServerAuthenticationConverter
         String token = authHeader.substring(7);
 
         try {
-            Claims claims = Jwts.parser()
+            Claims claims = Jwts
+                    .parserBuilder()
                     .setSigningKey(secretKey.getBytes())
+                    .build()
                     .parseClaimsJws(token)
                     .getBody();
 
@@ -44,7 +45,7 @@ public class JwtAuthenticationConverter implements ServerAuthenticationConverter
             Authentication auth = new UsernamePasswordAuthenticationToken(username, token, authorities);
             return Mono.just(auth);
 
-        } catch (SignatureException | IllegalArgumentException e) {
+        } catch (Exception e) {
             return Mono.empty();
         }
     }

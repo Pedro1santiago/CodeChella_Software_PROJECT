@@ -3,10 +3,15 @@ package com.example.codechella.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.authentication.AuthenticationWebFilter;
+import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
 import org.springframework.web.cors.CorsConfiguration;
+import reactor.core.publisher.Mono;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -20,7 +25,13 @@ public class SecurityConfig {
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
+
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter(secretKey);
+
+        ReactiveAuthenticationManager authenticationManager = authentication -> Mono.just(authentication);
+
+        AuthenticationWebFilter jwtFilter = new AuthenticationWebFilter(authenticationManager);
+        jwtFilter.setServerAuthenticationConverter(converter);
 
         http
                 .csrf(csrf -> csrf.disable())
@@ -30,11 +41,13 @@ public class SecurityConfig {
                             "http://localhost:5173",
                             "https://codechalle-front.vercel.app"
                     ));
-                    config.setAllowedMethods(java.util.List.of("GET","POST","PUT","DELETE","PATCH","OPTIONS"));
+                    config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
                     config.setAllowedHeaders(java.util.List.of("*"));
                     config.setAllowCredentials(true);
                     return config;
                 }))
+                .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
+                .addFilterAt(jwtFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/auth/**").permitAll()
                         .pathMatchers("/permissoes/pendentes").hasRole("SUPER")

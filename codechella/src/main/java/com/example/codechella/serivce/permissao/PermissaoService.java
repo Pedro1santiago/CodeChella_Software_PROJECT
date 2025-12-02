@@ -32,37 +32,36 @@ public class PermissaoService {
     private Mono<Void> validarSuperAdminPorId(Long superAdminId) {
         return superAdminRepository.findById(superAdminId)
                 .filter(s -> s.getTipoUsuario() == TipoUsuario.SUPER)
-                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso negado. Super Admin requerido.")))
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN)))
                 .then();
     }
 
     public Long getSuperAdminIdFromToken(String token) {
         try {
-            Claims claims = Jwts.parser()
+            Claims claims = Jwts
+                    .parserBuilder()
                     .setSigningKey(jwtSecret.getBytes())
+                    .build()
                     .parseClaimsJws(token)
                     .getBody();
 
             Object idClaim = claims.get("id");
-            if (idClaim instanceof Integer) {
-                return ((Integer) idClaim).longValue();
-            } else if (idClaim instanceof Long) {
-                return (Long) idClaim;
-            } else if (idClaim instanceof String) {
-                return Long.parseLong((String) idClaim);
-            }
-            throw new IllegalArgumentException("ID inválido no token");
+            if (idClaim instanceof Integer) return ((Integer) idClaim).longValue();
+            if (idClaim instanceof Long) return (Long) idClaim;
+            if (idClaim instanceof String) return Long.parseLong((String) idClaim);
+
+            throw new IllegalArgumentException();
         } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token JWT inválido");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }
     }
 
     public Mono<SolicitacaoPermissaoDTO> solicitarPermissaoAdmin(Long idUsuario) {
         return usuarioRepository.findById(idUsuario)
-                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado")))
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)))
                 .flatMap(usuario -> {
                     if (usuario.getTipoUsuario() != TipoUsuario.USER) {
-                        return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Você já é um administrador"));
+                        return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST));
                     }
                     SolicitacaoPermissao solicitacao = new SolicitacaoPermissao(idUsuario, TipoPermissao.ADMIN);
                     return solicitacaoRepository.save(solicitacao);
@@ -81,10 +80,10 @@ public class PermissaoService {
     public Mono<SolicitacaoPermissaoDTO> aprovarSolicitacao(Long idSolicitacao, Long superAdminId) {
         return validarSuperAdminPorId(superAdminId)
                 .then(solicitacaoRepository.findById(idSolicitacao))
-                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitação não encontrada")))
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)))
                 .flatMap(solicitacao -> {
                     if (solicitacao.getStatus() != StatusPermissao.PENDENTE) {
-                        return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Solicitação já foi processada"));
+                        return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST));
                     }
                     solicitacao.setStatus(StatusPermissao.APROVADO);
                     return solicitacaoRepository.save(solicitacao)
@@ -100,10 +99,10 @@ public class PermissaoService {
     public Mono<SolicitacaoPermissaoDTO> negarSolicitacao(Long idSolicitacao, String motivo, Long superAdminId) {
         return validarSuperAdminPorId(superAdminId)
                 .then(solicitacaoRepository.findById(idSolicitacao))
-                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitação não encontrada")))
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)))
                 .flatMap(solicitacao -> {
                     if (solicitacao.getStatus() != StatusPermissao.PENDENTE) {
-                        return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Solicitação já foi processada"));
+                        return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST));
                     }
                     solicitacao.setStatus(StatusPermissao.NEGADO);
                     solicitacao.setMotivoNegacao(motivo);
