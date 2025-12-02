@@ -40,20 +40,26 @@ public class JwtAuthenticationConverter implements ServerAuthenticationConverter
                     .getBody();
 
             String username = claims.getSubject();
-            List<String> roles = ((List<?>) claims.get("roles"))
-                    .stream()
-                    .map(Object::toString)
-                    .collect(Collectors.toList());
 
-            List<SimpleGrantedAuthority> authorities = roles.stream()
-                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
-                    .collect(Collectors.toList());
+            List<String> roles = claims.get("roles", List.class);
+            List<SimpleGrantedAuthority> authorities = roles == null ? List.of() :
+                    roles.stream().map(role -> new SimpleGrantedAuthority("ROLE_" + role.toString()))
+                            .collect(Collectors.toList());
+
+            Object superAdminIdObj = claims.get("SuperAdminId");
+            String superAdminId = superAdminIdObj != null ? superAdminIdObj.toString() : null;
+
+            if (superAdminId == null) {
+                log.warn("SuperAdminId ausente no token para usuário {}", username);
+                return Mono.empty(); // Retorna 401 se SuperAdminId é obrigatório
+            }
 
             Authentication auth = new UsernamePasswordAuthenticationToken(username, token, authorities);
+
             return Mono.just(auth);
 
         } catch (Exception e) {
-            log.warn("Erro ao validar token JWT", e);
+            log.error("Erro ao validar token JWT", e);
             return Mono.empty();
         }
     }
