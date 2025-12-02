@@ -64,6 +64,20 @@ public class EventoController {
                 });
     }
 
+    // Cancelar evento — Admin só se for criador, Super pode qualquer
+    @PatchMapping("/{id}/cancelar")
+    public Mono<EventoDTO> cancelar(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String authHeader
+    ) {
+
+        Long usuarioId = superAdminService.extrairIdSuperAdminDoHeader(authHeader);
+
+
+        return superAdminService.obterTipoDoUsuario(usuarioId)
+                .flatMap(tipo -> service.cancelarEvento(id, usuarioId));
+    }
+
     // Excluir evento — Admin e Super Admin podem
     @DeleteMapping("/{id}")
     public Mono<Void> excluir(

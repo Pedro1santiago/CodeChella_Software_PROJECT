@@ -6,7 +6,7 @@ import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.LocalDate;
 
-@Table("Ingressos")
+@Table("ingressos")
 public class Ingresso {
 
     @Id
@@ -16,7 +16,7 @@ public class Ingresso {
     private LocalDate date;
     private int quantidade;
     private Long quantidadeTotal;
-    private int valor;
+    private Double valor;
     private String descricao;
     private TipoStatus status;
 
@@ -34,8 +34,8 @@ public class Ingresso {
     public Long getQuantidadeTotal(){return quantidadeTotal;}
     public void setQuantidadeTotal(Long quantidadeTotal){this.quantidadeTotal = quantidadeTotal;}
 
-    public int getValor(){return valor;}
-    public void setValor(int valor){this.valor = valor;}
+    public Double getValor(){return valor;}
+    public void setValor(Double valor){this.valor = valor;}
 
     public String getDescricao(){return  descricao;}
     public void setDescricao(String descricao){this.descricao = descricao;}

@@ -108,7 +108,7 @@ public class EventoService {
                                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você só pode cancelar eventos que criou");
                             }
 
-                            evento.setStatusEvento(StatusEvento.FECHADO);
+                            evento.setStatusEvento(StatusEvento.CANCELADO);
                             return repository.save(evento).map(EventoDTO::toDto);
                         }));
     }
