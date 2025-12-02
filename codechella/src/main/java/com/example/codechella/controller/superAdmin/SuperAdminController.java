@@ -3,7 +3,6 @@ package com.example.codechella.controller.superAdmin;
 import com.example.codechella.models.users.UsuarioAdminDTO;
 import com.example.codechella.models.users.UsuarioResponseDTO;
 import com.example.codechella.serivce.superAdminService.SuperAdminService;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -18,55 +17,77 @@ public class SuperAdminController {
         this.superAdminService = superAdminService;
     }
 
+     //Cria um novo administrador a partir do DTO enviado.
     @PostMapping("/criar/admin")
     public Mono<UsuarioAdminDTO> criarAdmin(
-            @RequestBody UsuarioAdminDTO adminDTO,
-            @RequestHeader("super-admin-id") Long superAdminId) {
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody UsuarioAdminDTO adminDTO) {
+
+        Long superAdminId = superAdminService.extrairIdSuperAdminDoHeader(authHeader);
         return superAdminService.criarAdmin(superAdminId, adminDTO);
     }
 
-    @GetMapping(value = "/listar/admins", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<UsuarioAdminDTO> listarAdmins() {
-        return superAdminService.listarAdmins();
+     //Lista todos os administradores do sistema em JSON.
+    @GetMapping("/listar/admins")
+    public Flux<UsuarioAdminDTO> listarAdmins(@RequestHeader("Authorization") String authHeader) {
+        Long superAdminId = superAdminService.extrairIdSuperAdminDoHeader(authHeader);
+        return superAdminService.listarAdmins(superAdminId);
     }
 
+    // Remove um administrador pelo ID.
     @DeleteMapping("/remover/admin/{id}")
     public Mono<Void> removerAdmin(
             @PathVariable Long id,
-            @RequestHeader("super-admin-id") Long superAdminId) {
+            @RequestHeader("Authorization") String authHeader) {
+
+        Long superAdminId = superAdminService.extrairIdSuperAdminDoHeader(authHeader);
         return superAdminService.removerAdmin(id, superAdminId);
     }
 
-    @GetMapping(value = "/listar/usuarios", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<UsuarioResponseDTO> listarUsuarios() {
-        return superAdminService.listarUsuarios();
+     // Lista todos os usuários do sistema em JSON.
+    @GetMapping("/listar/usuarios")
+    public Flux<UsuarioResponseDTO> listarUsuarios(@RequestHeader("Authorization") String authHeader) {
+        Long superAdminId = superAdminService.extrairIdSuperAdminDoHeader(authHeader);
+        return superAdminService.listarUsuarios(superAdminId);
     }
 
+     //Remove um usuário pelo ID.
     @DeleteMapping("/remover/usuario/{id}")
     public Mono<Void> removerUsuario(
             @PathVariable Long id,
-            @RequestHeader("super-admin-id") Long superAdminId) {
+            @RequestHeader("Authorization") String authHeader) {
+
+        Long superAdminId = superAdminService.extrairIdSuperAdminDoHeader(authHeader);
         return superAdminService.removerUsuario(id, superAdminId);
     }
 
+    // Exclui qualquer evento pelo ID.
     @DeleteMapping("/eventos/{id}")
     public Mono<Void> excluirEventoQualquer(
             @PathVariable Long id,
-            @RequestHeader("super-admin-id") Long superAdminId) {
+            @RequestHeader("Authorization") String authHeader) {
+
+        Long superAdminId = superAdminService.extrairIdSuperAdminDoHeader(authHeader);
         return superAdminService.excluirEventoQualquer(id, superAdminId);
     }
 
+     //Promove um usuário comum para administrador.
     @PutMapping("/promover/admin/{id}")
     public Mono<UsuarioResponseDTO> promoverParaAdmin(
             @PathVariable Long id,
-            @RequestHeader("super-admin-id") Long superAdminId) {
+            @RequestHeader("Authorization") String authHeader) {
+
+        Long superAdminId = superAdminService.extrairIdSuperAdminDoHeader(authHeader);
         return superAdminService.promoverParaAdmin(id, superAdminId);
     }
 
+     // Rebaixa um administrador para usuário comum.
     @PutMapping("/rebaixar/user/{id}")
     public Mono<UsuarioResponseDTO> rebaixarParaUser(
             @PathVariable Long id,
-            @RequestHeader("super-admin-id") Long superAdminId) {
+            @RequestHeader("Authorization") String authHeader) {
+
+        Long superAdminId = superAdminService.extrairIdSuperAdminDoHeader(authHeader);
         return superAdminService.rebaixarParaUser(id, superAdminId);
     }
 }
