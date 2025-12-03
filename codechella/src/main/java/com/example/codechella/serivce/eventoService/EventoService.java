@@ -5,10 +5,7 @@ import com.example.codechella.models.evento.EventoDTO;
 import com.example.codechella.models.evento.StatusEvento;
 import com.example.codechella.models.evento.TipoEvento;
 import com.example.codechella.models.users.TipoUsuario;
-import com.example.codechella.models.users.SuperAdmin;
-import com.example.codechella.models.users.Usuario;
 import com.example.codechella.repository.EventoRepository;
-import com.example.codechella.repository.SuperAdminRepository;
 import com.example.codechella.repository.UsuarioRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,19 +30,11 @@ public class EventoService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    @Autowired
-    private SuperAdminRepository superAdminRepository;
-
-    // Valida se é ADMIN ou SUPER
     private Mono<TipoUsuario> validarCriador(Long usuarioId) {
-        return superAdminRepository.findById(usuarioId)
-                .map(SuperAdmin::getTipoUsuario)
-                .switchIfEmpty(
-                        usuarioRepository.findById(usuarioId)
-                                .map(Usuario::getTipoUsuario)
-                )
+        return usuarioRepository.findById(usuarioId)
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não encontrado")))
-                .flatMap(tipo -> {
+                .flatMap(usuario -> {
+                    TipoUsuario tipo = usuario.getTipoUsuario();
                     if (tipo == TipoUsuario.ADMIN || tipo == TipoUsuario.SUPER) {
                         return Mono.just(tipo);
                     }
@@ -53,19 +42,16 @@ public class EventoService {
                 });
     }
 
-    // Lista todos os eventos
     public Flux<EventoDTO> listarTodos() {
         return repository.findAll().map(EventoDTO::toDto);
     }
 
-    // Buscar evento por ID
     public Mono<EventoDTO> buscarPorId(Long id) {
         return repository.findById(id)
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento não encontrado")))
                 .map(EventoDTO::toDto);
     }
 
-    // Criar evento (ADMIN e SUPER)
     public Mono<EventoDTO> cadastrarEvento(Long usuarioId, EventoDTO dto) {
         return validarCriador(usuarioId)
                 .flatMap(tipo -> {
@@ -76,7 +62,6 @@ public class EventoService {
                 });
     }
 
-    // Atualizar evento
     public Mono<EventoDTO> atualizarId(Long id, EventoDTO dto, Long usuarioId) {
         return validarCriador(usuarioId)
                 .flatMap(tipo -> repository.findById(id)
@@ -98,7 +83,6 @@ public class EventoService {
                         }));
     }
 
-    // Cancelar evento
     public Mono<EventoDTO> cancelarEvento(Long eventoId, Long usuarioId) {
         log.info("[CANCELAR-SERVICE] Iniciando - eventoId: {}, usuarioId: {}", eventoId, usuarioId);
 
@@ -115,7 +99,6 @@ public class EventoService {
                             log.info("[CANCELAR-SERVICE] Validando permissões - tipo: {}, criador: {}, usuarioId: {}",
                                     tipo, evento.getIdAdminCriador(), usuarioId);
 
-                            // Super admin pode cancelar qualquer evento
                             if (tipo != TipoUsuario.SUPER && !evento.getIdAdminCriador().equals(usuarioId)) {
                                 log.warn("[CANCELAR-SERVICE] Usuário {} não tem permissão para cancelar evento {}", usuarioId, eventoId);
                                 return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "Você só pode cancelar eventos que criou"));
@@ -131,7 +114,6 @@ public class EventoService {
                         eventoId, e.getClass().getSimpleName(), e.getMessage(), e));
     }
 
-    // excluir evento
     public Mono<Void> excluir(Long id, Long usuarioId) {
         return validarCriador(usuarioId)
                 .flatMap(tipo -> repository.findById(id)
@@ -145,7 +127,6 @@ public class EventoService {
                         }));
     }
 
-    // Busca por categoria
     public Flux<EventoDTO> obterPorTipo(TipoEvento tipo) {
         return repository.findByTipo(tipo).map(EventoDTO::toDto);
     }

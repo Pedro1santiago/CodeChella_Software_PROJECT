@@ -2,7 +2,6 @@ package com.example.codechella.controller.evento;
 
 import com.example.codechella.models.evento.EventoDTO;
 import com.example.codechella.models.evento.TipoEvento;
-import com.example.codechella.models.users.TipoUsuario;
 import com.example.codechella.serivce.eventoService.EventoService;
 import com.example.codechella.serivce.superAdminService.SuperAdminService;
 import org.springframework.http.HttpStatus;
@@ -52,14 +51,7 @@ public class EventoController {
             @RequestHeader("Authorization") String authHeader
     ) {
         Long usuarioId = superAdminService.extrairIdSuperAdminDoHeader(authHeader);
-
-        return superAdminService.obterTipoDoUsuario(usuarioId)
-                .flatMap(tipo -> {
-                    if (tipo != TipoUsuario.ADMIN && tipo != TipoUsuario.SUPER) {
-                        return Mono.error(new RuntimeException("Apenas administradores podem criar eventos."));
-                    }
-                    return service.cadastrarEvento(usuarioId, dto);
-                });
+        return service.cadastrarEvento(usuarioId, dto);
     }
 
     @PatchMapping("/{id}/cancelar")
@@ -70,9 +62,7 @@ public class EventoController {
             Long usuarioId = superAdminService.extrairIdSuperAdminDoHeader(authHeader);
             log.info("[CANCELAR-CONTROLLER] UsuarioId extraído: {}", usuarioId);
 
-            return superAdminService.obterTipoDoUsuario(usuarioId)
-                    .doOnNext(tipo -> log.info("[CANCELAR-CONTROLLER] Tipo: {}", tipo))
-                    .flatMap(tipo -> service.cancelarEvento(id, usuarioId))
+            return service.cancelarEvento(id, usuarioId)
                     .doOnSuccess(dto -> log.info("[CANCELAR-CONTROLLER] Sucesso - eventoId: {}", id))
                     .doOnError(e -> log.error("[CANCELAR-CONTROLLER] Erro: {}", e.getMessage(), e));
         } catch (Exception e) {
@@ -87,14 +77,7 @@ public class EventoController {
             @RequestHeader("Authorization") String authHeader
     ) {
         Long usuarioId = superAdminService.extrairIdSuperAdminDoHeader(authHeader);
-
-        return superAdminService.obterTipoDoUsuario(usuarioId)
-                .flatMap(tipo -> {
-                    if (tipo != TipoUsuario.ADMIN && tipo != TipoUsuario.SUPER) {
-                        return Mono.error(new RuntimeException("Apenas administradores podem excluir eventos."));
-                    }
-                    return service.excluir(id, usuarioId);
-                });
+        return service.excluir(id, usuarioId);
     }
 
     @PutMapping("/{id}")
@@ -104,13 +87,6 @@ public class EventoController {
             @RequestHeader("Authorization") String authHeader
     ) {
         Long usuarioId = superAdminService.extrairIdSuperAdminDoHeader(authHeader);
-
-        return superAdminService.obterTipoDoUsuario(usuarioId)
-                .flatMap(tipo -> {
-                    if (tipo != TipoUsuario.ADMIN && tipo != TipoUsuario.SUPER) {
-                        return Mono.error(new RuntimeException("Apenas administradores podem atualizar eventos."));
-                    }
-                    return service.atualizarId(id, dto, usuarioId);
-                });
+        return service.atualizarId(id, dto, usuarioId);
     }
 }
