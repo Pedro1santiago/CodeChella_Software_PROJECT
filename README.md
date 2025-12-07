@@ -8,7 +8,7 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
 
-**🌐 [Acesse a Aplicação ao Vivo](https://codechella-five-sigma.vercel.app)**
+**🌐 [Acesse a Aplicação ao Vivo](https://codechella-five-sigma.vercel.app)** | **🧪 [Ir para Credenciais de Teste](#-credenciais-para-teste)**
 
 Sistema completo de gerenciamento de eventos com controle de permissões em três níveis, desenvolvido com Spring WebFlux para máxima performance e escalabilidade.
 
@@ -409,6 +409,33 @@ if (userAdmin.getTipoUsuario() == TipoUsuario.ADMIN
 - **DTO Pattern** - Separação de camadas
 - **Repository Pattern** - Abstração de dados
 - **Service Layer** - Lógica de negócio isolada
+
+---
+
+## 🧪 Credenciais para Teste
+
+### 🎭 Admin - Acesso Completo de Administrador
+```
+Email: admin@codechella.com
+Senha: 123456
+```
+**Use essas credenciais para testar todas as funcionalidades de Administrador:**
+- Criar eventos
+- Definir quantidade de ingressos
+- Editar e excluir seus próprios eventos
+- Pesquisar usuários
+- Gerenciar status dos eventos
+
+### 🎫 Usuário Normal - Compra de Ingressos
+```
+Email: user.base@gmail.com
+Senha: 123456
+```
+**Use essas credenciais para testar as funcionalidades de usuário comum:**
+- Visualizar eventos disponíveis
+- Filtrar eventos por categoria
+- Comprar ingressos
+- Solicitar permissão para se tornar Admin
 
 ---
 
