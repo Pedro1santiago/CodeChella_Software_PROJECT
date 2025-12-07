@@ -43,6 +43,7 @@ public class SecurityConfig {
                     config.setAllowedOrigins(java.util.List.of(
                             "http://localhost:5173",
                             "https://codechalle-front.vercel.app",
+                            "https://codechella-five-sigma.vercel.app",
                             "https://codechalle-front-1dcb.vercel.app"
                     ));
                     config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
